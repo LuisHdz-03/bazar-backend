@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 1. Modelo de Usuarios (Perfil unificado para clientes y tenderos)
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  fullName  String
+  password  String
+  shops     Shop[]
+  orders    Order[]  @relation("CustomerOrders") // Pedidos realizados como cliente
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+// 2. Modelo de Comercios (Tiendas del bazar hiperlocal)
+model Shop {
+  id       String  @id @default(uuid())
+  ownerId  String
+  owner    User    @relation(fields: [ownerId], references: [id])
+  name     String
+  category String
+  isOpen   Boolean @default(false)
+
+  // Relación opcional para la ubicación física o zona del comercio
+  address Address?
+
+  catalogItems CatalogItem[]
+  orders       Order[] // Pedidos recibidos en esta tienda
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// 3. Ubicación o Zona (Para que el comercio defina su lugar en concreto)
+model Address {
+  id         String   @id @default(uuid())
+  shopId     String   @unique
+  shop       Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  street     String?
+  city       String?
+  state      String?
+  postalCode String?
+  latitude   Float? // Para geolocalización precisa si el tendero lo prefiere
+  longitude  Float? // Para geolocalización precisa si el tendero lo prefiere
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// 4. Catálogo (Inventario diario de los comercios)
+model CatalogItem {
+  id          String      @id @default(uuid())
+  shopId      String
+  shop        Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name        String
+  price       Float
+  isAvailable Boolean     @default(true)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// 5. Pedidos o Apartados (Para cuando los usuarios compren en el bazar)
+model Order {
+  id         String      @id @default(uuid())
+  customerId String
+  customer   User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  shopId     String
+  shop       Shop        @relation(fields: [shopId], references: [id])
+  status     String      @default("PENDING")
+  total      Float
+  items      OrderItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+// 6. Detalle de los productos dentro de un pedido
+model OrderItem {
+  id            String      @id @default(uuid())
+  orderId       String
+  order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  catalogItemId String
+  catalogItem   CatalogItem @relation(fields: [catalogItemId], references: [id])
+  quantity      Int         @default(1)
+  price         Float
+}
