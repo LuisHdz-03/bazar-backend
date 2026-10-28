@@ -6,6 +6,9 @@ import { PrismaModule } from './prisma.module.js';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ShopsModule } from './shops/shops.module.js';
+import { AddressesModule } from './addresses/addresses.module.js';
+import { CatalogModule } from './catalog/catalog.module.js';
+import { OrdersModule } from './orders/orders.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -23,6 +26,9 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     UsersModule,
     AuthModule,
     ShopsModule,
+    AddressesModule,
+    CatalogModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
